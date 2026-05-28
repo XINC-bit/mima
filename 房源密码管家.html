@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#1a1a2e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="密码管家">
+<title>房源密码管家</title>
+<link rel="manifest" id="manifest-placeholder">
+<style>
+  :root {
+    --bg: #0f0f1a;
+    --bg2: #1a1a2e;
+    --bg3: #16213e;
+    --card: #1e1e32;
+    --card2: #252540;
+    --accent: #4f8ef7;
+    --accent2: #7c3aed;
+    --text: #f0f0ff;
+    --text2: #9090b0;
+    --text3: #5a5a7a;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --green: #22c55e;
+    --red: #ef4444;
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: 'PingFang SC', 'Noto Sans SC', sans-serif; }
+
+  /* Layout */
+  #app { display: flex; flex-direction: column; height: 100%; height: 100dvh; }
+  .header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 14px 16px 12px; flex-shrink: 0; }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .header-title { font-size: 18px; font-weight: 700; letter-spacing: 0.03em; background: linear-gradient(90deg, #4f8ef7, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .header-sub { font-size: 12px; color: var(--text3); margin-top: 1px; }
+  .btn-add { background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); padding: 8px 14px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; letter-spacing: 0.02em; }
+  .btn-add:active { opacity: 0.8; transform: scale(0.97); }
+
+  .search-wrap { position: relative; }
+  .search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text3); font-size: 15px; pointer-events: none; }
+  #search { width: 100%; height: 38px; background: var(--bg3); border: 1px solid var(--border); border-radius: 20px; color: var(--text); font-size: 14px; padding: 0 12px 0 34px; outline: none; }
+  #search::placeholder { color: var(--text3); }
+  #search:focus { border-color: var(--accent); }
+
+  .list-area { flex: 1; overflow-y: auto; padding: 12px 14px 100px; }
+  .list-area::-webkit-scrollbar { width: 3px; }
+  .list-area::-webkit-scrollbar-thumb { background: var(--text3); border-radius: 2px; }
+
+  .stat-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+  .stat-pill { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 5px 12px; font-size: 12px; color: var(--text2); }
+  .stat-pill span { color: var(--accent); font-weight: 600; }
+
+  /* Cards */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; transition: border-color 0.15s; position: relative; overflow: hidden; }
+  .card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--accent), var(--accent2)); border-radius: 3px 0 0 3px; }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+  .card-room { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: 0.02em; }
+  .card-addr { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .card-actions { display: flex; gap: 4px; }
+  .ic-btn { background: none; border: none; color: var(--text3); font-size: 16px; cursor: pointer; padding: 4px; border-radius: 6px; line-height: 1; }
+  .ic-btn:active { background: var(--card2); }
+  .ic-btn.del:active { color: var(--red); }
+
+  .pwd-box { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; align-items: center; gap: 8px; }
+  .pwd-label { font-size: 11px; color: var(--text3); letter-spacing: 0.05em; flex-shrink: 0; }
+  .pwd-digits { font-size: 22px; font-weight: 800; font-family: 'Courier New', monospace; color: var(--text); letter-spacing: 0.12em; flex: 1; }
+  .btn-copy { background: rgba(79,142,247,0.15); border: 1px solid rgba(79,142,247,0.3); color: var(--accent); border-radius: var(--radius-sm); padding: 5px 10px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+  .btn-copy:active { background: rgba(79,142,247,0.3); }
+  .btn-copy.copied { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.3); color: var(--green); }
+
+  .card-note { font-size: 12px; color: var(--text2); margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); line-height: 1.5; }
+
+  /* Empty */
+  .empty { text-align: center; padding: 60px 20px; color: var(--text3); }
+  .empty-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-text { font-size: 15px; }
+
+  /* Modal */
+  .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
+  .modal-mask.hidden { display: none; }
+  .modal { background: var(--bg2); border-radius: 20px 20px 0 0; border-top: 1px solid var(--border2); width: 100%; max-width: 500px; padding: 20px 18px 40px; }
+  .modal-title { font-size: 17px; font-weight: 700; margin-bottom: 18px; color: var(--text); }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; letter-spacing: 0.03em; }
+  .field input, .field textarea {
+    width: 100%; background: var(--bg3); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+    color: var(--text); font-size: 15px; padding: 10px 12px; outline: none; font-family: inherit;
+  }
+  .field textarea { resize: none; height: 72px; line-height: 1.5; }
+  .field input:focus, .field textarea:focus { border-color: var(--accent); }
+  .modal-btns { display: flex; gap: 10px; margin-top: 18px; }
+  .btn-cancel2 { flex: 1; height: 46px; background: var(--card); border: 1px solid var(--border2); border-radius: var(--radius-sm); color: var(--text2); font-size: 15px; cursor: pointer; }
+  .btn-save2 { flex: 2; height: 46px; background: var(--accent); border: none; border-radius: var(--radius-sm); color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.03em; }
+  .btn-save2:active { opacity: 0.85; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(30,30,50,0.95); border: 1px solid var(--border2); color: var(--text); font-size: 13px; padding: 9px 20px; border-radius: 20px; z-index: 100; pointer-events: none; opacity: 0; transition: opacity 0.2s; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+
+  /* Bottom hint */
+  .bottom-hint { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg2); border-top: 1px solid var(--border); padding: 10px 16px; font-size: 11px; color: var(--text3); text-align: center; z-index: 10; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-title">🔑 密码管家</div>
+        <div class="header-sub">贝壳租赁 · 房源密码</div>
+      </div>
+      <button class="btn-add" onclick="openAdd()">＋ 添加</button>
+    </div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input id="search" type="search" placeholder="搜索房号、小区或备注…" oninput="render()" autocomplete="off">
+    </div>
+  </div>
+
+  <div class="list-area">
+    <div class="stat-bar" id="stat-bar"></div>
+    <div id="list"></div>
+  </div>
+</div>
+
+<div class="modal-mask hidden" id="modal" onclick="maskClick(event)">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">添加房源</div>
+    <div class="field"><label>房号 *</label><input id="f-room" placeholder="如 A栋1201、翠湖502"></div>
+    <div class="field"><label>密码 *</label><input id="f-pwd" placeholder="门锁密码" inputmode="numeric"></div>
+    <div class="field"><label>小区 / 地址</label><input id="f-addr" placeholder="如 碧桂园·天玺"></div>
+    <div class="field"><label>备注</label><textarea id="f-note" placeholder="密码箱位置、特殊说明等…"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn-cancel2" onclick="closeModal()">取消</button>
+      <button class="btn-save2" onclick="saveItem()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="bottom-hint" id="bottom-hint"></div>
+
+<script>
+// ── Data ────────────────────────────────────────────
+const KEY = 'hpwd_v2';
+let items = [];
+let editId = null;
+
+function load() {
+  try { items = JSON.parse(localStorage.getItem(KEY)) || []; } catch(e) { items = []; }
+}
+function persist() {
+  try { localStorage.setItem(KEY, JSON.stringify(items)); } catch(e) { toast('存储失败，请检查浏览器权限'); }
+}
+load();
+
+// ── Render ───────────────────────────────────────────
+function render() {
+  const q = (document.getElementById('search').value || '').trim().toLowerCase();
+  const filtered = q ? items.filter(i =>
+    i.room.toLowerCase().includes(q) ||
+    (i.addr||'').toLowerCase().includes(q) ||
+    (i.note||'').toLowerCase().includes(q)
+  ) : items;
+
+  const statBar = document.getElementById('stat-bar');
+  statBar.innerHTML = q
+    ? `<div class="stat-pill">搜索结果 <span>${filtered.length}</span> 套</div><div class="stat-pill">共 <span>${items.length}</span> 套</div>`
+    : `<div class="stat-pill">共 <span>${items.length}</span> 套房源</div><div class="stat-pill">最多 <span>15</span> 套</div>`;
+
+  const list = document.getElementById('list');
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">${q ? '🔍' : '🏠'}</div><div class="empty-text">${q ? '没有匹配的房源' : '还没有房源\n点击右上角添加'}</div></div>`;
+    return;
+  }
+  list.innerHTML = filtered.map(item => `
+    <div class="card">
+      <div class="card-top">
+        <div>
+          <div class="card-room">${esc(item.room)}</div>
+          ${item.addr ? `<div class="card-addr">📍 ${esc(item.addr)}</div>` : ''}
+        </div>
+        <div class="card-actions">
+          <button class="ic-btn" onclick="openEdit(${item.id})" aria-label="编辑">✏️</button>
+          <button class="ic-btn del" onclick="del(${item.id})" aria-label="删除">🗑️</button>
+        </div>
+      </div>
+      <div class="pwd-box">
+        <span class="pwd-label">密码</span>
+        <span class="pwd-digits">${esc(item.pwd)}</span>
+        <button class="btn-copy" id="cp-${item.id}" onclick="copyPwd('${esc(item.pwd)}',${item.id},'${esc(item.room)}')">复制</button>
+      </div>
+      ${item.note ? `<div class="card-note">💬 ${esc(item.note)}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Copy ─────────────────────────────────────────────
+function copyPwd(pwd, id, room) {
+  const btn = document.getElementById('cp-'+id);
+  navigator.clipboard.writeText(pwd).then(() => {
+    toast('✅ 已复制 ' + room + ' 的密码');
+    if(btn){ btn.textContent='已复制'; btn.classList.add('copied'); setTimeout(()=>{ btn.textContent='复制'; btn.classList.remove('copied'); }, 2000); }
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = pwd; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    toast('✅ 已复制 ' + room + ' 的密码');
+  });
+}
+
+// ── Toast ─────────────────────────────────────────────
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ── Modal ─────────────────────────────────────────────
+function openAdd() {
+  editId = null;
+  document.getElementById('modal-title').textContent = '添加房源';
+  ['room','pwd','addr','note'].forEach(k => document.getElementById('f-'+k).value='');
+  document.getElementById('modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('f-room').focus(), 100);
+}
+function openEdit(id) {
+  const item = items.find(i=>i.id===id); if(!item) return;
+  editId = id;
+  document.getElementById('modal-title').textContent = '编辑房源';
+  document.getElementById('f-room').value = item.room;
+  document.getElementById('f-pwd').value = item.pwd;
+  document.getElementById('f-addr').value = item.addr||'';
+  document.getElementById('f-note').value = item.note||'';
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+function maskClick(e) { if(e.target===document.getElementById('modal')) closeModal(); }
+
+function saveItem() {
+  const room = document.getElementById('f-room').value.trim();
+  const pwd = document.getElementById('f-pwd').value.trim();
+  if (!room) { toast('⚠️ 请填写房号'); return; }
+  if (!pwd) { toast('⚠️ 请填写密码'); return; }
+  if (editId) {
+    const i = items.find(x=>x.id===editId);
+    if(i){ i.room=room; i.pwd=pwd; i.addr=document.getElementById('f-addr').value.trim(); i.note=document.getElementById('f-note').value.trim(); }
+    toast('✅ 已更新');
+  } else {
+    if (items.length >= 15) { toast('⚠️ 最多只能添加15套'); return; }
+    items.unshift({ id: Date.now(), room, pwd, addr: document.getElementById('f-addr').value.trim(), note: document.getElementById('f-note').value.trim() });
+    toast('✅ 已添加');
+  }
+  persist(); closeModal(); render();
+}
+
+function del(id) {
+  const item = items.find(i=>i.id===id);
+  if(!item) return;
+  if(!confirm('确认删除「' + item.room + '」？')) return;
+  items = items.filter(i=>i.id!==id);
+  persist(); render(); toast('🗑️ 已删除');
+}
+
+// ── PWA: Manifest (inline via blob) ──────────────────
+const manifest = {
+  name: '房源密码管家',
+  short_name: '密码管家',
+  description: '贝壳租赁房源密码快速查询',
+  start_url: '.',
+  display: 'standalone',
+  background_color: '#0f0f1a',
+  theme_color: '#1a1a2e',
+  orientation: 'portrait',
+  icons: [
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%231a1a2e'/%3E%3Ctext x='96' y='130' font-size='110' text-anchor='middle'%3E🔑%3C/text%3E%3C/svg%3E", sizes: '192x192', type: 'image/svg+xml' },
+    { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%231a1a2e'/%3E%3Ctext x='256' y='350' font-size='300' text-anchor='middle'%3E🔑%3C/text%3E%3C/svg%3E", sizes: '512x512', type: 'image/svg+xml' }
+  ]
+};
+const blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+document.getElementById('manifest-placeholder').href = URL.createObjectURL(blob);
+
+// ── PWA: Service Worker (inline) ─────────────────────
+if ('serviceWorker' in navigator) {
+  const swCode = `
+    const CACHE = 'hpwd-v1';
+    self.addEventListener('install', e => {
+      e.waitUntil(caches.open(CACHE).then(c => c.addAll(['.'])));
+      self.skipWaiting();
+    });
+    self.addEventListener('activate', e => {
+      e.waitUntil(clients.claim());
+    });
+    self.addEventListener('fetch', e => {
+      e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+    });
+  `;
+  const swBlob = new Blob([swCode], {type:'text/javascript'});
+  const swUrl = URL.createObjectURL(swBlob);
+  navigator.serviceWorker.register(swUrl).catch(()=>{});
+}
+
+// ── Install hint ──────────────────────────────────────
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  const hint = document.getElementById('bottom-hint');
+  hint.innerHTML = '💡 点击 <strong>安装到桌面</strong> 可离线使用 &nbsp;<button onclick="doInstall()" style="background:#4f8ef7;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer">立即安装</button>';
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('bottom-hint').textContent = '✅ 已安装到桌面！';
+  setTimeout(() => document.getElementById('bottom-hint').textContent = '', 3000);
+});
+function doInstall() { if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt=null; } }
+
+// If already standalone
+if (window.matchMedia('(display-mode: standalone)').matches) {
+  document.getElementById('bottom-hint').textContent = '';
+} else if (!deferredPrompt) {
+  document.getElementById('bottom-hint').innerHTML = '📱 用 Chrome 打开，点菜单 → <strong>添加到主屏幕</strong>，即可离线使用';
+}
+
+// ── Init ──────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
